@@ -1,0 +1,10 @@
+http://crockford.com/pp/asynchronicity.pptx
+http://crockford.com/pp/principles.pptx
+http://crockford.com/pp/problems.pptx
+http://crockford.com/pp/rq.pptx
+ 
+http://crockford.com/onjs/2.pptx
+http://crockford.com/onjs/3.pptx
+http://crockford.com/onjs/4.pptx
+http://crockford.com/onjs/7.pptx
+http://crockford.com/onjs/8.pptx
