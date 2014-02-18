@@ -1,0 +1,447 @@
+<html><head></head><body><pre><script>
+function log(arg){
+	document.writeln(arg);
+}
+
+function identity(x){
+	return x;
+}
+
+function add(x,y){
+ return x+y;
+}
+
+function sub(x,y){
+return x-y;
+}
+
+function mul(x,y){
+	return x*y;
+}
+
+function applyf(binary){
+	return function (x){
+		return function (y){
+			return binary(x,y);
+		};
+	};
+}
+
+function curry(func,x){
+	return function(y) {
+		return func(x,y);
+	};
+}
+//extra credit
+function curry1(func,x){
+	return applyf(func)(y);
+}
+
+function addf(x){
+	return function(y){
+		return x+y;
+	}
+}
+inc = addf(1);
+inc1 = addf(1);
+inc2 = applyf(add)(1);
+inc3 = curry(add,1);
+
+//log(inc1(5));
+//log(inc1(inc1(5)));
+//log(curry(add,3)(4));
+//log(curry(mul,5)(6));
+//log(add(11,11));
+
+function twice(func){
+	return function(x){
+		return func(x,x);
+	};
+}
+var doubl = twice(add);
+//log(doubl(11)); // (twice(add))(11)
+var square = twice(mul);
+//log(square(11));
+
+function switcheroo(func) {
+	return function(x,y) {
+		return func(y,x);
+	};
+}
+var bus = switcheroo(sub);
+//log(bus(2,3));
+//log(bus(3,2));
+
+function composeu(func1, func2){
+	return function(x){
+		return func2(func1(x));
+	};
+}
+log('composeu: '+composeu(doubl,square)(3)+'\n'); // 36
+
+function composeb(func1,func2){
+	return (function(x,y,z){ 
+			return func2(func1(x,y),z);
+		});
+	
+}
+log('composeb: '+composeb(add,mul)(2,3,5)+'\n'); // 25
+
+function once(func){
+	var x = true;
+	return (function(y,z){
+		if(x){
+			x = false;
+			return func(y,z);
+		} 
+		return ;
+	});
+}
+//alternate way of doing this
+function once2(func){
+	return (function(y,z){
+		var temp;
+		if(func){
+			temp = func;
+			func = false;
+			return temp(y,z);
+		} 
+		return ;
+	});
+}
+//var add_once = once(add);
+var add_once = once2(add);
+log('add_once: '+add_once(3,4)+'\n'); //7
+log('add_once: '+add_once(3,5)+'\n'); //undefined
+log('add_once: '+add_once(3,6)+'\n'); //undefined
+
+function fromTo(x,y){
+	return (function(){
+		var inc = x;
+
+		if(inc<y){
+			//x++;
+			x = curry(add,1)(x)
+			return inc;
+		}
+	});
+}
+var index = fromTo(0,3);
+log('index: '+index()+'\n');//0
+log('index: '+index()+'\n');//1
+log('index: '+index()+'\n');//2
+log('index: '+index()+'\n');//undefined
+
+function element(xarray, func){	//TODO
+	return (function(){
+		var j = 0;
+		var i;
+		if(!i){
+			i=0
+		}
+		if(func){
+			i = func();
+		}else{
+			++i;
+		}
+		return xarray[i];
+	});
+}
+function element1(array, func){ //TODO
+	if(func===undefined){
+		func = fromTo(0,array.length);
+	}
+	
+	return (function(){
+		return array[func()];
+	});
+}
+
+var val = element(['a','b','c','d'],fromTo(1,3))
+var val1 = element(['a','b','c','d'])
+log('val: '+val()+'\n');//'b'
+log('val: '+val()+'\n');//'c'
+//log('val: '+val()+'\n');//
+log('val: '+val()+'\n');//undefined
+
+log('val: '+val1()+'\n');//'b'
+log('val: '+val1()+'\n');//'c'
+log('val: '+val1()+'\n');//undefined
+
+
+function collect(func, array){
+	return (function(){
+			var result = func();
+			if(result!== undefined){
+				array.push(result);
+			}	
+		return result;
+	});
+}
+
+var array = [], col=collect(fromTo(1,3), array);
+log('col: '+col()+'\n'); //1
+log('col: '+col()+'\n'); //2
+log('col: '+col()+'\n'); //undefined
+log('array: '+array+'\n\n\n'); //[1,2]
+log('============================='+'\n');
+//filter
+function filter(func, predicatefunc){
+	return (function recur(){
+			var result = func();			
+			if(predicatefunc(result) || result === undefined ){
+				return result;
+			}
+			return recur();
+	});
+} // called tail recursion; in ecmascript6 this will optimized
+
+function filter(func, predicatefunc){ // todo using do while
+	return (function recur(){
+			var result = func();			
+			if(predicatefunc(result) || result === undefined ){
+				return result;
+			}
+			return recur();
+	});
+}
+var fil = filter(fromTo(0,5), function third(value){ return (value % 3) === 0; });
+log('filter: '+fil()+'\n'); //0
+log('filter: '+fil()+'\n'); //3
+log('filter: '+fil()+'\n'); //undefined
+log('filter: '+fil()+'\n'); //undefined
+log('============================='+'\n');
+
+// concat two fromto
+
+function concat (func1,func2){
+	return function(){
+		var result;
+		var currentfunc;
+		currentfunc = func1;
+		result = currentfunc();
+		if (result === undefined){
+			currentfunc = func2;
+			result = currentfunc();
+		}
+		return result;		
+	};
+}
+function concat1(func1,func2){ // another sol
+	return function (){
+		var value;
+		if (func1 !== undefined){
+			value = func1();
+			if(value !== undefined){
+				return value;
+			}
+			func1 = undefined;
+		}
+		return func2();
+	}
+} 
+var con = concat(fromTo(1,3), fromTo(0,2));
+log('concat: '+con()+'\n'); //1
+log('concat: '+con()+'\n'); //2
+log('concat: '+con()+'\n'); //0
+log('concat: '+con()+'\n'); //1
+log('concat: '+con()+'\n'); //undefined
+log('============================='+'\n');
+var con1 = concat1(fromTo(1,3), fromTo(0,2));
+log('concat1: '+con1()+'\n'); //1
+log('concat1: '+con1()+'\n'); //2
+log('concat1: '+con1()+'\n'); //0
+log('concat1: '+con1()+'\n'); //1
+log('concat1: '+con1()+'\n'); //undefined
+log('============================='+'\n');
+
+//counter
+// function counterf(x){
+// 	var obj = {
+// 		next: '',
+// 		prev: ''
+// 	};
+// 	obj.
+// 	return obj;
+// }
+
+function counterf(value){
+	return {
+		next: function(){
+		 	value += 1;
+		 	return value;	
+		},
+		prev: function(){
+			value -=1;
+			return value;
+		}
+	};
+}
+
+var counter = counterf(10), next = counter.next, prev = counter.prev; 
+//TODO
+// next();//11
+// prev(); //10
+// prev(); //9
+// next(); //10
+//TODO
+
+//revocable
+
+function revocable(func){
+	return {
+		invoke: function(x){
+			return func && func(x); // how && works; if func is truthy go to next else return falsy
+		},
+		revoke: function(){
+			func = undefined;
+			return 'revoked';
+		}
+	};
+}
+
+var temp = revocable(log), invoke = temp.invoke;
+log('invoke: '+invoke(7)+'\n'); //7
+log('revoke: '+temp.revoke()+'\n'); // revoked
+log('invoke: '+invoke(8)+'\n'); //undefined
+log('============================='+'\n');
+
+//gensymf
+function gensymf(sym){
+		var inc;
+		if(!inc){ inc = 0;}
+	return (function(){
+		++inc;
+		return sym+inc;
+	});
+}
+var gensymg = gensymf("G"), gensymh = gensymf("H");
+log('gensymg: '+gensymg()+'\n'); // G1
+log('gensymh: '+gensymh()+'\n'); // H1
+log('gensymg: '+gensymg()+'\n'); // G2
+log('gensymh: '+gensymh()+'\n'); // H2
+log('gensymg: '+gensymg()+'\n'); // G3
+log('gensymh: '+gensymh()+'\n'); // H3
+log('gensymg: '+gensymg()+'\n'); // G4
+log('gensymh: '+gensymh()+'\n'); // H4
+log('============================='+'\n');
+//gensymff
+function gensymff(func,seed){ //TODO; not incrementing
+	return function(sym){
+				var inc=seed;
+				return (function(){
+					num = func(inc);
+					return sym+num;
+			});
+	};
+}
+
+var gensymf1 = gensymff(inc1,0), 
+	gensymg1 = gensymf1("G"),
+	gensymh1 = gensymf1("H");
+
+	log('gensymg1: '+gensymg1()+'\n'); // G1
+	log('gensymh1: '+gensymh1()+'\n'); // H1
+	log('gensymg1: '+gensymg1()+'\n'); // G2
+	log('gensymh1: '+gensymh1()+'\n'); // H2
+	log('============================='+'\n');
+	
+	
+//fibonacci
+function fibonaccif1(x,y){
+ return (function fibo(init,next){
+		if(init === undefined || next === undefined){ 
+			init=x;
+			next=y;
+		}
+		if(init<2){
+			return x;
+		} else
+		{
+			return fibo(init+1,next+1);
+		}
+	});
+}
+function fibonaccif2(a,b){
+	return function(){
+		var next = a;
+		a = b;
+		b+= next;
+		return next;
+	}
+}
+
+var fib = fibonaccif2(0,1);	
+log('fib: '+fib()+'\n');// 0
+log('fib: '+fib()+'\n');//1
+log('fib: '+fib()+'\n');//1
+log('fib: '+fib()+'\n');//2
+log('fib: '+fib()+'\n');//3
+log('fib: '+fib()+'\n');//5
+//log('fib: '+fib()+'\n');//3
+//log('fib: '+fib()+'\n');//3
+log('============================='+'\n');
+
+
+//// m
+
+function m(value, source){
+	return {
+		value: value,
+		source: source || String(value)
+	};
+}
+log('m: '+JSON.stringify(m(3))+'\n'); // {"value":3,"source":"3"}
+log('============================='+'\n');
+
+//addm
+function addm(m1,m2){
+	return m(
+		m1.value+m2.value,
+		"("+m1.source+'+'+m2.source+")"
+	);
+}
+log('addm: '+JSON.stringify(addm(m(3),m(4)))+'\n'); // {"value":7,"source":"(3+4)"}
+log('addm: '+JSON.stringify(addm(m(1),m(Math.PI,"pi")))+'\n'); // {"value":7,"source":"(3+4)"}
+log('============================='+'\n');
+
+//applym - this is a monad in functional programming
+function applym(func,str){
+	return function(m1,m2){
+		return m(func(m1.value,m2.value),"("+m1.source+str+m2.source+")");
+	};
+		
+}
+var addm1 = applym(add,"+");
+log('applym: '+JSON.stringify(addm1(m(3),m(4)))+'\n'); // {"value":7,"source":"(3+4)"}
+log('applym: '+JSON.stringify(applym(mul,"*")(m(3),m(4)))+'\n'); // {"value":12,"source":"(3*4)"}
+log('============================='+'\n');
+
+
+//applymod - this is a monad in functional programming
+function applymod(func,str){
+	return function(x,y){
+		if(typeof x === 'number'){ x = m(x);}
+		if(typeof y === 'number'){ y = m(y);}
+		return m(func(x.value,y.value),"("+x.source+str+y.source+")");
+	};
+		
+}
+var addm2 = applymod(add,"+");
+log('applymod: '+JSON.stringify(addm2(3,4))+'\n'); // {"value":7,"source":"(3+4)"}
+var mulm3 = applymod(mul,"*");
+log('applymod: '+JSON.stringify(mulm3(3,4))+'\n'); // {"value":12,"source":"(3*4)"}
+
+log('============================='+'\n');
+//addg
+//write a function addg that adds from many invocations, until it sees an empty invocation.
+//addg() // undefined
+//addg(2)() // 2
+//addg(2)(7)() // 9
+//addg(3)(4)(0)() // 7
+//addg(1)(2)(4)(8)() // 15
+//solution has a function which calls itself
+log('title: '+''+'\n');
+log(': '+''+'\n');
+log('============================='+'\n');
+</script></pre></body></html>

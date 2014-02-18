@@ -1,0 +1,38 @@
+<!-- THIS needs more work-->
+<html><head></head><body><pre><script>
+function log(arg){
+	document.writeln(arg);
+}
+
+function applyf(binary){
+	return function (x){
+		return function (y){
+			return binary(x,y);
+		};
+	};
+}
+
+function addf(x){
+	return function(y){
+		return x+y;
+	}
+}
+
+function add(x,y){
+ return x+y;
+}
+
+function sub(x,y){
+return x-y;
+}
+
+function mul(x,y){
+	return x*y;
+}
+
+//log(addf(3)(4));
+log(applyf(add)(3)(4));
+</script>
+</pre>
+</body>
+</html>

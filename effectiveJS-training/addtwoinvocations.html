@@ -1,0 +1,15 @@
+<html><head></head><body><pre><script>
+function log(arg){
+	document.writeln(arg);
+}
+function addf(x){
+	return function(y){
+		return x+y;
+	}
+}
+
+log(addf(3)(4));
+</script>
+</pre>
+</body>
+</html>
